@@ -2,49 +2,58 @@
   text-align: center;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 40vmin;
-  pointer-events: none;
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 body {
-  background: #abdc28;
-  padding: 20px;
+  text-align: center;
+  margin: 0 auto;
+  background: #becabf;
+  padding: 16px;
 }
 
 table {
+  text-align: center;
   margin: 0 auto;
+  padding: 0 auto;
   border-collapse: collapse;
-  background: black;
-}
-td {
-  width: 40px; height: 40px;
+  background: honeydew;
+  border: #282c34 2.5vw solid;
 }
 
-tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd) {
-  background: white;
+td {
+  width: 73px;
+  height: 73px;
+}
+
+tr:nth-child(even) td:nth-child(odd), tr:nth-child(odd) td:nth-child(even) {
+  background: saddlebrown;
+}
+
+.material-icons {
+  position: relative;
+  font-size: 2.8em;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.rotate-180 {
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+
+.ChessIcons {
+  font-size: 3em;
+}
+
+
+.selected {
+  background: #282c34 !important;
+}
+
+div .floatingText {
+  position: fixed;
+  display: contents;
+  width: 100px;
 }
