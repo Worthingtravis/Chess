@@ -5,8 +5,7 @@
 body {
   text-align: center;
   margin: 0 auto;
-  background: #becabf;
-  padding: 16px;
+  background: #282c34;
 }
 
 table {
@@ -14,18 +13,37 @@ table {
   margin: 0 auto;
   padding: 0 auto;
   border-collapse: collapse;
-  background: honeydew;
+  //background: aliceblue;
   border: #282c34 2.5vw solid;
+}
+table:after {
+  content: "";
+  display: block;
 }
 
 td {
   width: 73px;
   height: 73px;
 }
-
-tr:nth-child(even) td:nth-child(odd), tr:nth-child(odd) td:nth-child(even) {
-  background: saddlebrown;
+.pHelper{
+  display:table-footer-group;
+  background: #23542c34;
+  border-top: black .5px solid;
 }
+.helper{
+  background: transparent !important;
+  height: 20px;
+  padding-top: 4px;
+}
+
+ tr:nth-child(odd), td:nth-child(even) {
+  background: white;
+ }
+
+
+tr:nth-child(even) td:nth-child(odd),  tr:nth-child(odd) td:nth-child(even)  {
+  background: saddlebrown;
+ }
 
 .material-icons {
   position: relative;
@@ -34,17 +52,15 @@ tr:nth-child(even) td:nth-child(odd), tr:nth-child(odd) td:nth-child(even) {
   margin: 0 !important;
 }
 
-.rotate-180 {
-  -webkit-transform: rotate(180deg);
-  -moz-transform: rotate(180deg);
-  -ms-transform: rotate(180deg);
-  -o-transform: rotate(180deg);
-  transform: rotate(180deg);
-}
 
 
 .ChessIcons {
   font-size: 3em;
+  -webkit-text-fill-color: white;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
+  stroke: black;
+  stroke-width: .15em;
 }
 
 
@@ -55,5 +71,16 @@ tr:nth-child(even) td:nth-child(odd), tr:nth-child(odd) td:nth-child(even) {
 div .floatingText {
   position: fixed;
   display: contents;
-  width: 100px;
+  width: 10px;
+}
+
+.moveHistory {
+  width: 500px !important;
+  height: 200px;
+  text-align: center;
+  background: blanchedalmond;
+  border: 1px solid black;
+  font-size:20px;
+  display:inline-flex;
+  flex-wrap:wrap;
 }

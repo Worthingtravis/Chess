@@ -6,7 +6,8 @@ import {
   faChessBishop,
   faChessKnight,
   faChessPawn,
-  faChessRook
+  faChessRook,
+  IconDefinition
 } from "@fortawesome/free-solid-svg-icons";
 import { Piece, Point, SelectedPiece } from "./global.interfaces";
 import {
@@ -22,8 +23,8 @@ import {
 export function Board({ grid, setGridAtIndex }) {
   let [selectedPiece, setSelectedPiece] = useState<SelectedPiece>();
   let [selectedTarget, setSelectedTarget] = useState<any>();
-  let [blackHistory, setBlackHistory] = useState<Point[]>([]);
-  let [whiteHistory, setWhiteHistory] = useState<Point[]>([]);
+  let [blackHistory, setBlackHistory] = useState<SelectedPiece[]>([]);
+  let [whiteHistory, setWhiteHistory] = useState<SelectedPiece[]>([]);
   let [viewSide, setViewSide] = useState<any>({ white: true });
 
   function updateSelectedTarget(target: any) {
@@ -40,7 +41,9 @@ export function Board({ grid, setGridAtIndex }) {
     }
   }
 
-  function getPieceIcon(gridElementElement: any) {
+  function getPieceIcon(
+    gridElementElement: "pawn" | "rook" | "knight" | "bishop" | "queen" | "king"
+  ): IconDefinition | null {
     // @ts-ignore
     let type = gridElementElement.type || "";
     switch (type) {
@@ -57,28 +60,19 @@ export function Board({ grid, setGridAtIndex }) {
       case "king":
         return faChessKing;
       default:
-        return "";
+        return null;
     }
   }
 
-  function getPieceColor(gridElementElement: Piece) {
-    // @ts-ignore
-    let side = gridElementElement.side || "";
-    switch (side) {
-      case "white":
-        return "#becabf";
-      case "black":
-        return "#000000";
-      default:
-        return "green";
-    }
-  }
-
-  function getRotation(gridElementElement: Piece) {
-    // @ts-ignore
-    if (gridElementElement.side === "black") {
-      return 180;
-    }
+  function getFontAwesomeIcon(piece: Piece) {
+    return (
+      <FontAwesomeIcon
+        // @ts-ignore
+        icon={piece.icon}
+        className={"ChessIcons"}
+        color={piece.side === "white" ? "whitesmoke" : "burlywood"}
+      />
+    );
   }
 
   // @ts-ignore
@@ -87,18 +81,9 @@ export function Board({ grid, setGridAtIndex }) {
     y = y - 1;
     if (grid[x] && grid[x][y]) {
       // @ts-ignore
-      let piece = grid[x][y];
+      let piece: Piece = grid[x][y];
       // @ts-ignore
-      return (
-        <FontAwesomeIcon
-          // @ts-ignore
-          icon={getPieceIcon(piece)}
-          className={"ChessIcons"}
-          // @ts-ignore
-          // rotation={getRotation(piece)}
-          color={getPieceColor(piece)}
-        />
-      );
+      return getFontAwesomeIcon(piece);
     }
   }
 
@@ -123,9 +108,17 @@ export function Board({ grid, setGridAtIndex }) {
     );
   }
 
+  function sideToMove(side: "white" | "black") {
+    return false;
+    return side === "white"
+      ? whiteHistory.length > blackHistory.length
+      : blackHistory.length >= whiteHistory.length;
+  }
+
   function MoveValidation(x: any, y: any, selectedPiece: SelectedPiece): any {
     // @ts-ignore
-    const { type, side } = selectedPiece.piece;
+    const type = selectedPiece.piece.type;
+    const { side } = selectedPiece.piece;
     const { x: x2, y: y2 } = selectedPiece.point;
 
     let m = side === "white" ? 1 : -1;
@@ -133,12 +126,10 @@ export function Board({ grid, setGridAtIndex }) {
     let direction;
     let origin;
     let valid = false;
-    if (
-      (blackHistory.length >= whiteHistory.length && side === "black") ||
-      (whiteHistory.length > blackHistory.length && side === "white")
-    ) {
+    if (sideToMove(side)) {
       return false;
     }
+
     switch (type) {
       case "pawn":
         distance = selectedPiece.piece.hasMoved ? 1 : 2;
@@ -149,7 +140,6 @@ export function Board({ grid, setGridAtIndex }) {
             selectedPiece.piece.hasMoved = true;
             setGridAtIndex(x, y, selectedPiece.piece);
             setGridAtIndex(x2, y2, "");
-            //always unselect the piece on success
             setSelectedPiece(undefined);
             valid = true;
           }
@@ -159,7 +149,6 @@ export function Board({ grid, setGridAtIndex }) {
         if (validateRook(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
-          //always unselect the piece on success
           setSelectedPiece(undefined);
           valid = true;
         }
@@ -169,7 +158,6 @@ export function Board({ grid, setGridAtIndex }) {
           // console.log(x, y, x2, y2);
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
-          //always unselect the piece on success
           setSelectedPiece(undefined);
           valid = true;
         }
@@ -178,16 +166,14 @@ export function Board({ grid, setGridAtIndex }) {
         if (validateKnight(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
-          //always unselect the piece on success
           setSelectedPiece(undefined);
           valid = true;
         }
-        return true;
+        break;
       case "queen":
         if (validateBishop(x, y, x2, y2) || validateRook(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
-          //always unselect the piece on success
           setSelectedPiece(undefined);
           valid = true;
         }
@@ -196,21 +182,28 @@ export function Board({ grid, setGridAtIndex }) {
         if (validateKing(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
-          //always unselect the piece on success
           setSelectedPiece(undefined);
           valid = true;
         }
         break;
       default:
         setSelectedPiece(undefined);
+        valid = false;
     }
     // @ts-ignore
 
-    if (selectedPiece.piece.side === "black" && valid)
-      setBlackHistory(blackHistory => [...blackHistory, { x, y }]);
-    if (selectedPiece.piece.side === "white" && valid)
-      setWhiteHistory(whiteHistory => [...whiteHistory, { x, y }]);
-    valid = false;
+    if (selectedPiece.piece.side === "black" && valid) {
+      setBlackHistory(blackHistory => [
+        ...blackHistory,
+        { piece: selectedPiece.piece, point: { x, y } }
+      ]);
+    }
+    if (selectedPiece.piece.side === "white" && valid) {
+      setWhiteHistory(whiteHistory => [
+        ...whiteHistory,
+        { piece: selectedPiece.piece, point: { x, y } }
+      ]);
+    }
   }
 
   // A bishop can only move along the diagonal.
@@ -218,47 +211,88 @@ export function Board({ grid, setGridAtIndex }) {
   // If X is changing; Y has to be changing at the same rate.
   // example: if x goes from 1 -> 2, then Y has to move to 2 or -2
   // example: if y goes from -1 -> -2, then Y has to move to 2 or -2
-  function validateBishop(x: number, y: number, x2: number, y2: number) {
-    let subY = y2 - y;
-    let subX = x2 - x;
+  const difference = function(a: number, b: number) {
+    return Math.abs(a - b);
+  };
 
-    //AA
-    //  if (((subX)/(subY)) === 1){
-    //      for (let i = x2+1; i <= x; i++ ) {
-    //          console.log('AA',i);
+  function validateBishop(x: number, y: number, x0: number, y0: number) {
+    let subY = y - y0;
+    let subX = x - x0;
+
+    let slope = subY / subX;
+    console.group("Validate Bishop");
+    console.log("subX", subX);
+    console.log("subY", subY);
+    if (Math.abs(slope) !== 1) return false;
+
+    x > x0
+      ? console.log("right", "from", x0, "to", x, "distance of", subX)
+      : console.log("left", x - x0);
+    y > y0 ? console.log("up", y - y0) : console.log("down", y - y0);
+
+    x > x0
+      ? console.log("right", "from", x0, "to", x, "distance of", subX)
+      : console.log("left", x - x0);
+
+    let xHigh, xLow, yHigh, yLow;
+    let dx = 1;
+    let dy = 1;
+
+    if (x > x0) {
+      xHigh = x;
+      xLow = x0;
+    } else {
+      dx = -1;
+      xHigh = x0;
+      xLow = x;
+    }
+
+    if (y > y0) {
+      yHigh = y;
+      yLow = y0;
+    } else {
+      dy = -1;
+      yHigh = y0;
+      yLow = y;
+    }
+    console.log("starting");
+
+
+    // if (((subX)/(subY)) === 1){
+    //     for (let i = x2+1; i <= x; i++ ) {
+    //         console.log('AA',i);
     //
-    //          if (grid[i][i]){
-    //              console.log('grid piece found')
-    //          }
+    //         if (grid[i][i]){
+    //             console.log('grid piece found')
+    //         }
     //
-    //          if ( Math.abs(i) >= 100){
-    //              console.log('loop broke', i)
-    //              return false;
-    //          }
+    //         if ( Math.abs(i) >= 100){
+    //             console.log('loop broke', i)
+    //             return false;
+    //         }
     //
-    //      }
-    //  }
+    //     }
+    // }
 
     //BB
-    let m = subY / subX;
+    // if (Math.abs(m) === 1) {
+    //   if (x < x2)
+    //     for (let i = x2; i >= x; i--) {
+    //       console.log(x + i + m, y + i - m);
+    //
+    //       if (grid[x + i + m][y + i + m]) {
+    //         // console.log(grid[(x+i)+m][(y+i)+m])
+    //         return false;
+    //       }
+    //
+    //       if (Math.abs(i) >= 100) {
+    //         console.log("loop broke", i);
+    //         return false;
+    //       }
+    //     }
+    // }
+    console.groupEnd();
 
-    console.log("M ==", subY / subX);
-    if (Math.abs(m) === 1) {
-      if (x < x2)
-        for (let i = x2; i >= x; i--) {
-          console.log(x + i + m, y + i - m);
-
-          if (grid[x + i + m][y + i + m]) {
-            // console.log(grid[(x+i)+m][(y+i)+m])
-            return false;
-          }
-
-          if (Math.abs(i) >= 100) {
-            console.log("loop broke", i);
-            return false;
-          }
-        }
-    }
     return true;
   }
 
@@ -380,16 +414,27 @@ export function Board({ grid, setGridAtIndex }) {
     });
   }
 
-  function getTypographyFromCoord(historyArray: Point[]) {
+  function getTypographyFromCoord(
+    historyArray: SelectedPiece[],
+    isWhite: boolean
+  ) {
     return (
       (historyArray &&
         historyArray.length > 0 &&
-        historyArray.map((item: Point) => {
+        historyArray.map((item: SelectedPiece) => {
+          const { type } = item.piece;
           return (
-            <Typography>
-              {(10 + item.x).toString(36).toUpperCase()}
-              {item.y + 1}
-              <Icon style={{ verticalAlign: "top" }}>arrow_right</Icon>
+            <Typography
+              style={{
+                fontSize: 16
+              }}
+            >
+              {/*{type[0].toUpperCase()+type[1]}*/}
+
+              {getFontAwesomeIcon(item.piece)}
+              {(10 + item.point.x).toString(36).toUpperCase()}
+              {item.point.y + 1}
+              <Icon style={{ fontSize: 20 }}>subdirectory_arrow_right</Icon>
             </Typography>
           );
           //to avoid over flow on screen
@@ -398,21 +443,31 @@ export function Board({ grid, setGridAtIndex }) {
   }
 
   return (
-    <>
-      <Card>
-        <CardContent>
-          <table id={"chess_board"}>
-            <tbody>{renderBoard()}</tbody>
-          </table>
-
-          <List style={{ textAlign: "center" }}>
-            <ListItem style={{ textAlign: "center" }}>
-              {getTypographyFromCoord(blackHistory)}
-            </ListItem>
-            <ListItem>{getTypographyFromCoord(whiteHistory)}</ListItem>
-          </List>
-        </CardContent>
-      </Card>
-    </>
+    <Card>
+      <CardContent style={{ display: "flex" }}>
+        {" "}
+        <List disablePadding={true} color={"primary"}>
+          <ListItem className={"moveHistory"}>
+            {getTypographyFromCoord(blackHistory, false)}
+          </ListItem>
+          <ListItem className={"moveHistory"}>
+            {getTypographyFromCoord(whiteHistory, true)}
+          </ListItem>
+        </List>
+        <table id={"chess_board"}>
+          <tbody>{renderBoard()}</tbody>
+          <p className={"pHelper"}>
+            <td className={"helper"}>A</td>
+            <td className={"helper"}>B</td>
+            <td className={"helper"}>C</td>
+            <td className={"helper"}>D</td>
+            <td className={"helper"}>E</td>
+            <td className={"helper"}>F</td>
+            <td className={"helper"}>G</td>
+            <td className={"helper"}>H</td>
+          </p>
+        </table>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,5 +1,8 @@
 
+import {
 
+    IconDefinition
+} from "@fortawesome/free-solid-svg-icons";
 
 
 export interface Point {
@@ -11,7 +14,8 @@ export interface Piece {
     hasMoved: boolean
     side: "black" | "white";
     alive: boolean,
-    type: "pawn" | "rook" | "knight" | "bishop" | "queen" | "king",
+    type:  "pawn" | "rook" | "knight" | "bishop" | "queen" | "king",
+    icon:IconDefinition
 }
 
 export interface SelectedPiece {
