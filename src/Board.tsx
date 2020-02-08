@@ -1,14 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChessQueen,
-  faChessKing,
-  faChessBishop,
-  faChessKnight,
-  faChessPawn,
-  faChessRook,
-  IconDefinition
-} from "@fortawesome/free-solid-svg-icons";
+
 import { Piece, Point, SelectedPiece } from "./global.interfaces";
 import {
   Card,
@@ -19,8 +11,13 @@ import {
   Icon
 } from "@material-ui/core";
 
-// @ts-ignore
-export function Board({ grid, setGridAtIndex }) {
+export function Board({
+  grid,
+  setGridAtIndex
+}: {
+  grid: any;
+  setGridAtIndex: any;
+}): any {
   let [selectedPiece, setSelectedPiece] = useState<SelectedPiece>();
   let [selectedTarget, setSelectedTarget] = useState<any>();
   let [blackHistory, setBlackHistory] = useState<SelectedPiece[]>([]);
@@ -38,29 +35,6 @@ export function Board({ grid, setGridAtIndex }) {
       target.classList.add("selected");
     } else {
       if (selectedTarget) selectedTarget.classList.remove("selected");
-    }
-  }
-
-  function getPieceIcon(
-    gridElementElement: "pawn" | "rook" | "knight" | "bishop" | "queen" | "king"
-  ): IconDefinition | null {
-    // @ts-ignore
-    let type = gridElementElement.type || "";
-    switch (type) {
-      case "pawn":
-        return faChessPawn;
-      case "rook":
-        return faChessRook;
-      case "bishop":
-        return faChessBishop;
-      case "knight":
-        return faChessKnight;
-      case "queen":
-        return faChessQueen;
-      case "king":
-        return faChessKing;
-      default:
-        return null;
     }
   }
 
@@ -109,14 +83,12 @@ export function Board({ grid, setGridAtIndex }) {
   }
 
   function sideToMove(side: "white" | "black") {
-    return false;
     return side === "white"
       ? whiteHistory.length > blackHistory.length
       : blackHistory.length >= whiteHistory.length;
   }
 
   function MoveValidation(x: any, y: any, selectedPiece: SelectedPiece): any {
-    // @ts-ignore
     const type = selectedPiece.piece.type;
     const { side } = selectedPiece.piece;
     const { x: x2, y: y2 } = selectedPiece.point;
@@ -126,7 +98,9 @@ export function Board({ grid, setGridAtIndex }) {
     let direction;
     let origin;
     let valid = false;
-    if (sideToMove(side)) {
+    let turns = false;
+
+    if (sideToMove(side) && turns) {
       return false;
     }
 
@@ -146,7 +120,7 @@ export function Board({ grid, setGridAtIndex }) {
         }
         break;
       case "rook":
-        if (validateRook(x, y, x2, y2)) {
+        if (validateVerticalHorizontal(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
           setSelectedPiece(undefined);
@@ -154,8 +128,7 @@ export function Board({ grid, setGridAtIndex }) {
         }
         break;
       case "bishop":
-        if (validateBishop(x, y, x2, y2)) {
-          // console.log(x, y, x2, y2);
+        if (validateDiagonal(x, y, x2, y2)) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
           setSelectedPiece(undefined);
@@ -171,7 +144,10 @@ export function Board({ grid, setGridAtIndex }) {
         }
         break;
       case "queen":
-        if (validateBishop(x, y, x2, y2) || validateRook(x, y, x2, y2)) {
+        if (
+          validateDiagonal(x, y, x2, y2) ||
+          validateVerticalHorizontal(x, y, x2, y2)
+        ) {
           setGridAtIndex(x, y, selectedPiece.piece);
           setGridAtIndex(x2, y2, "");
           setSelectedPiece(undefined);
@@ -190,7 +166,6 @@ export function Board({ grid, setGridAtIndex }) {
         setSelectedPiece(undefined);
         valid = false;
     }
-    // @ts-ignore
 
     if (selectedPiece.piece.side === "black" && valid) {
       setBlackHistory(blackHistory => [
@@ -206,133 +181,86 @@ export function Board({ grid, setGridAtIndex }) {
     }
   }
 
-  // A bishop can only move along the diagonal.
-  // For X and Y Terminology,
-  // If X is changing; Y has to be changing at the same rate.
-  // example: if x goes from 1 -> 2, then Y has to move to 2 or -2
-  // example: if y goes from -1 -> -2, then Y has to move to 2 or -2
-  const difference = function(a: number, b: number) {
-    return Math.abs(a - b);
-  };
-
-  function validateBishop(x: number, y: number, x0: number, y0: number) {
-    let subY = y - y0;
-    let subX = x - x0;
-
-    let slope = subY / subX;
-    console.group("Validate Bishop");
-    console.log("subX", subX);
-    console.log("subY", subY);
-    if (Math.abs(slope) !== 1) return false;
-
-    x > x0
-      ? console.log("right", "from", x0, "to", x, "distance of", subX)
-      : console.log("left", x - x0);
-    y > y0 ? console.log("up", y - y0) : console.log("down", y - y0);
-
-    x > x0
-      ? console.log("right", "from", x0, "to", x, "distance of", subX)
-      : console.log("left", x - x0);
-
-    let xHigh, xLow, yHigh, yLow;
-    let dx = 1;
-    let dy = 1;
-
-    if (x > x0) {
-      xHigh = x;
-      xLow = x0;
-    } else {
-      dx = -1;
-      xHigh = x0;
-      xLow = x;
+  function inRange(
+    x0: number,
+    x: number,
+    xArray: { [x: string]: any },
+    yArray: { [x: string]: any }
+  ): boolean {
+    for (let i = 1; i < xArray.length; i++) {
+      if (grid[xArray[i]][yArray[i]]) {
+        if (i === xArray.length - 1) {
+          return (
+            selectedPiece !== undefined &&
+            selectedPiece.piece.side !== grid[xArray[i]][yArray[i]].side
+          );
+        } else {
+          return false;
+        }
+      }
     }
-
-    if (y > y0) {
-      yHigh = y;
-      yLow = y0;
-    } else {
-      dy = -1;
-      yHigh = y0;
-      yLow = y;
-    }
-    console.log("starting");
-
-
-    // if (((subX)/(subY)) === 1){
-    //     for (let i = x2+1; i <= x; i++ ) {
-    //         console.log('AA',i);
-    //
-    //         if (grid[i][i]){
-    //             console.log('grid piece found')
-    //         }
-    //
-    //         if ( Math.abs(i) >= 100){
-    //             console.log('loop broke', i)
-    //             return false;
-    //         }
-    //
-    //     }
-    // }
-
-    //BB
-    // if (Math.abs(m) === 1) {
-    //   if (x < x2)
-    //     for (let i = x2; i >= x; i--) {
-    //       console.log(x + i + m, y + i - m);
-    //
-    //       if (grid[x + i + m][y + i + m]) {
-    //         // console.log(grid[(x+i)+m][(y+i)+m])
-    //         return false;
-    //       }
-    //
-    //       if (Math.abs(i) >= 100) {
-    //         console.log("loop broke", i);
-    //         return false;
-    //       }
-    //     }
-    // }
-    console.groupEnd();
-
     return true;
   }
 
-  // A rook can only move in a straight line.
-  function validateRook(x: number, y: number, x2: number, y2: number) {
-    function validateXorY(
-      a: number,
-      b: number,
-      a2: number,
-      b2: number,
-      forX: boolean = true
-    ) {
-      // If X is changing; Y CANT change..
-      // Respectively, if Y is changing, X CANT change.
-      if (b2 === b && a2 !== a) {
-        if (a < a2) {
-          for (let i = a; i < a2; i++) {
-            if (forX) {
-              if (grid[i][b]) return false;
-            } else {
-              if (grid[b][i]) return false;
-            }
-          }
-        }
-        if (a > a2) {
-          for (let i = a; i > a2; i--) {
-            if (forX) {
-              if (grid[i][b]) return false;
-            } else {
-              if (grid[b][i]) return false;
-            }
-          }
-        }
-        return true;
-      }
-      return true;
+  function validateDiagonal(x: number, y: number, x0: number, y0: number) {
+    let subY = y - y0;
+    let subX = x - x0;
+    let slope = subY / subX;
+    if (Math.abs(slope) !== 1) return false;
+
+    let xArray = range(x0, x, 1);
+    let yArray = range(y0, y, 1);
+    console.log(inRange(x0, x, xArray, yArray));
+    return inRange(x0, x, xArray, yArray);
+  }
+
+  function range(start: any, end: any, step: any) {
+    var range = [];
+
+    if (step === 0) {
+      throw TypeError("Step cannot be zero.");
     }
 
-    // ensure the rook isn't passing through any pieces along the way
-    return validateXorY(x, y, x2, y2) && validateXorY(y, x, y2, x2, false);
+    typeof step == "undefined" && (step = 1);
+
+    if (end < start) {
+      step = -step;
+    }
+
+    while (step > 0 ? end >= start : end <= start) {
+      range.push(start);
+      start += step;
+    }
+    return range;
+  }
+
+  // A rook can only move in a straight line.
+  function validateVerticalHorizontal(
+    x: number,
+    y: number,
+    x2: number,
+    y2: number
+  ) {
+    let XR = range(x2, x, 1);
+    let YR = range(y2, y, 1);
+
+    let subY = y - y2;
+    let subX = x - x2;
+    let slope = subY / subX;
+
+    if (Math.abs(slope) === 1) return false;
+    if (y !== y2 && x !== x2) return false;
+
+    let largerArray = XR.length > YR.length ? XR : YR;
+    let smallerArray = XR.length < YR.length ? XR : YR;
+
+    largerArray.forEach((value, key) => {
+      smallerArray.push(smallerArray[0]);
+    });
+
+    smallerArray.pop();
+
+    return inRange(x2, x, XR, YR);
   }
 
   function validateKing(x: number, y: number, x2: number, y2: number) {
@@ -343,20 +271,16 @@ export function Board({ grid, setGridAtIndex }) {
     );
   }
 
-  // @ts-ignore
-  function getPieceAtCoord(x: any, y: any, event): any {
+  function getPieceAtCoord(x: any, y: any, event: React.MouseEvent<HTMLTableDataCellElement, MouseEvent>): any {
     x = x - 1;
     y = y - 1;
-    // event.currentTarget.classList.remove("selected");
 
     //If you have already selected a piece
     if (selectedPiece && selectedPiece.piece && selectedPiece.piece.side) {
-      console.log(selectedPiece.piece.side);
       //and the square you selected has a piece on it.
       if (grid[x] && grid[x][y]) {
         let tempPiece: SelectedPiece = { piece: grid[x][y], point: { x, y } };
 
-        console.log("a piece was selected, and there is a piece here.");
         //and the previously selected piece is not the same color as the newly selected piece
         if (selectedPiece.piece.side !== tempPiece.piece.side) {
           MoveValidation(x, y, selectedPiece);
@@ -399,11 +323,7 @@ export function Board({ grid, setGridAtIndex }) {
 
   function renderRows(row: number) {
     const castRow = String(row);
-    return (
-      <>
-        <tr id={castRow}>{renderColumns(castRow)}</tr>
-      </>
-    );
+    return <tr id={castRow}>{renderColumns(castRow)}</tr>;
   }
 
   function renderBoard() {
@@ -429,9 +349,13 @@ export function Board({ grid, setGridAtIndex }) {
                 fontSize: 16
               }}
             >
-              {/*{type[0].toUpperCase()+type[1]}*/}
 
-              {getFontAwesomeIcon(item.piece)}
+              <div className={'history_label'}>
+
+                {getFontAwesomeIcon(item.piece)}
+
+              <div className={'piece_text'}>  {type[0].toUpperCase()+type[1]}</div>
+              </div>
               {(10 + item.point.x).toString(36).toUpperCase()}
               {item.point.y + 1}
               <Icon style={{ fontSize: 20 }}>subdirectory_arrow_right</Icon>

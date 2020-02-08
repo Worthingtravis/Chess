@@ -29,20 +29,16 @@ td {
   display:table-footer-group;
   background: #23542c34;
   border-top: black .5px solid;
-}
-.helper{
-  background: transparent !important;
-  height: 20px;
-  padding-top: 4px;
-}
 
- tr:nth-child(odd), td:nth-child(even) {
-  background: white;
- }
-
+  td {
+    background: transparent !important;
+    height: 20px;
+    padding-top: 4px;
+  }
+}
 
 tr:nth-child(even) td:nth-child(odd),  tr:nth-child(odd) td:nth-child(even)  {
-  background: saddlebrown;
+  background: #7a3d12;
  }
 
 .material-icons {
@@ -83,4 +79,8 @@ div .floatingText {
   font-size:20px;
   display:inline-flex;
   flex-wrap:wrap;
+}
+
+.piece_text{
+  display: block;
 }
